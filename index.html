@@ -106,10 +106,13 @@
         .work-card {
             width: 160px; aspect-ratio: 9/16; background: #111; 
             overflow: hidden; border-radius: 12px;
-            flex-shrink: 0; cursor: pointer; border: 1px solid rgba(255,255,255,0.08);
+            flex-shrink: 0; cursor: pointer; border: 1px solid rgba(255,255,255,0.1);
             transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
             animation: card-in 1s ease forwards;
             opacity: 0;
+            position: relative;
+            z-index: 1;
+            transform-origin: center bottom; /* 设置缩放原点在底部，视觉上更稳 */
         }
 
         @keyframes card-in {
@@ -129,16 +132,32 @@
             object-fit: cover; 
             object-position: top; 
             pointer-events: none; 
+            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            transform: scale(1.01); /* 消除边缘锯齿 */
         }
-        .work-card:hover { transform: translateY(-10px); border-color: var(--color-red); z-index: 10; box-shadow: 0 10px 30px rgba(255,62,62,0.2); }
 
-        /* 详情页样式：强化毛玻璃和响应式 */
+        /* 修复后的 整个卡片 突出动画 */
+        .work-card:hover { 
+            transform: translateY(-20px) scale(1.1); /* 增加缩放比例和位移感 */
+            border-color: rgba(255, 255, 255, 0.5); /* 亮白边框突出感 */
+            z-index: 100; /* 确保悬停时绝对在最上方 */
+            box-shadow: 
+                0 0 30px rgba(255, 62, 62, 0.4), 
+                0 15px 50px rgba(0, 0, 0, 0.8); /* 红色光晕+深色投影 */
+        }
+        
+        /* 内部图片的配合微动 */
+        .work-card:hover img {
+            transform: scale(1.05); /* 图片稍微动一点点，营造景深感 */
+        }
+
+        /* 详情页样式 */
         #detailPanel {
             position: fixed; inset: 0; z-index: 2000; display: flex;
             opacity: 0; pointer-events: none; transition: 0.4s ease;
             background: rgba(0, 0, 0, 0.8);
             backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px); /* 兼容 iOS Safari */
+            -webkit-backdrop-filter: blur(25px);
         }
         #detailPanel.active { opacity: 1; pointer-events: auto; }
 
@@ -195,7 +214,6 @@
     <div id="shooting-container"></div>
     <canvas id="bg-canvas"></canvas>
 
-    <!-- 入口页 -->
     <div id="intro">
         <div class="text-center px-4 relative z-10">
             <p class="mb-3 tracking-[0.2em] text-red-500 font-bold text-[10px] md:text-xs">2025年度艺术人才培训资助项目</p>
@@ -206,7 +224,6 @@
         </div>
     </div>
 
-    <!-- 前言 -->
     <div id="preface">
         <div class="max-w-3xl w-[90%] text-white/80 leading-relaxed font-light">
             <h2 class="text-xl md:text-2xl font-black mb-6 md:mb-8 text-blue-400 border-b border-blue-400/30 pb-4 tracking-widest">PREFACE / 前言</h2>
@@ -224,13 +241,11 @@
         </div>
     </div>
 
-    <!-- 展厅墙 -->
     <div id="exhibition" class="exhibition-wall">
         <div class="track-container"><div id="track1" class="marquee"></div></div>
         <div class="track-container"><div id="track2" class="marquee marquee-reverse"></div></div>
     </div>
 
-    <!-- 详情页 -->
     <div id="detailPanel">
         <div class="pan-viewport" id="panArea">
             <canvas id="renderCanvas"></canvas>
@@ -366,7 +381,6 @@
         let lastX = 0, lastY = 0, initialPinchDist = 0;
         let evCache = [];
 
-        // 统一 Pointer 事件，支持 PC 和移动端
         panArea.addEventListener('pointerdown', e => {
             evCache.push(e);
             state.isDragging = true;
@@ -384,7 +398,6 @@
             if (index > -1) evCache[index] = e;
 
             if (state.isDragging && evCache.length === 1) {
-                // 单点平移（鼠标或单指）
                 const dx = e.clientX - lastX;
                 const dy = e.clientY - lastY;
                 state.x += dx;
@@ -393,11 +406,9 @@
                 lastY = e.clientY;
                 requestAnimationFrame(draw);
             } else if (evCache.length === 2) {
-                // 双指捏合缩放（移动端专用）
                 const dist = Math.hypot(evCache[0].clientX - evCache[1].clientX, evCache[0].clientY - evCache[1].clientY);
                 if (initialPinchDist > 0) {
                     const zoomFactor = dist / initialPinchDist;
-                    // 手机端缩放灵敏度控制
                     const newScale = state.scale * (1 + (zoomFactor - 1) * 0.4);
                     state.scale = Math.min(Math.max(0.3, newScale), 5);
                 }
@@ -417,7 +428,6 @@
         panArea.addEventListener('pointercancel', handlePointerEnd);
         panArea.addEventListener('pointerleave', handlePointerEnd);
 
-        // PC端滚轮缩放
         panArea.addEventListener('wheel', e => {
             e.preventDefault();
             const factor = e.deltaY > 0 ? 0.9 : 1.1;
@@ -435,7 +445,6 @@
                 card.onclick = () => openDetail(w, i);
                 if (i % 2 === 0) t1.appendChild(card); else t2.appendChild(card);
             });
-            // 循环滚动克隆
             [t1, t2].forEach(track => {
                 const items = Array.from(track.children);
                 items.forEach(item => {

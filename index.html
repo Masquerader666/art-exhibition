@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>创作实践成果展 - 2025年度艺术人才培训资助项目</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -21,6 +21,8 @@
             width: 100vw; height: 100vh;
             overflow: hidden;
             -webkit-font-smoothing: antialiased;
+            /* 防止手机端橡皮卷效果 */
+            position: fixed;
         }
         
         #bg-canvas { position: fixed; inset: 0; z-index: -1; pointer-events: none; }
@@ -72,27 +74,35 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             letter-spacing: -0.02em;
+            /* 手机端防止标题强制换行，并动态调整大小 */
+            white-space: nowrap;
         }
 
         .exhibition-wall {
             position: relative; z-index: 20; height: 100vh;
             display: flex; flex-direction: column; justify-content: center;
-            gap: 25px; opacity: 0; transition: opacity 1.5s ease;
+            gap: 15px; opacity: 0; transition: opacity 1.5s ease;
         }
 
         .track-container { width: 100%; overflow: hidden; display: flex; }
-        .marquee { display: flex; gap: 20px; padding: 10px 40px; animation: scroll 120s linear infinite; }
+        .marquee { display: flex; gap: 15px; padding: 10px 40px; animation: scroll 120s linear infinite; }
         .marquee-reverse { animation: scroll-reverse 120s linear infinite; }
         @keyframes scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
         @keyframes scroll-reverse { from { transform: translateX(-50%); } to { transform: translateX(0); } }
 
-        /* 卡片优化：object-position: top 确保显示上半部分 */
+        /* 移动端卡片尺寸微调 */
         .work-card {
-            width: 220px; aspect-ratio: 9/16; background: #111; 
-            overflow: hidden; border-radius: 16px;
+            width: 160px; aspect-ratio: 9/16; background: #111; 
+            overflow: hidden; border-radius: 12px;
             flex-shrink: 0; cursor: pointer; border: 1px solid rgba(255,255,255,0.08);
             transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
+        @media (min-width: 768px) {
+            .work-card { width: 220px; border-radius: 16px; }
+            .exhibition-wall { gap: 25px; }
+            .marquee { gap: 20px; }
+        }
+
         .work-card img { 
             width: 100%; 
             height: 100%; 
@@ -112,11 +122,13 @@
 
         .pan-viewport {
             flex: 1; position: relative; overflow: hidden; cursor: grab;
-            touch-action: none; display: flex; align-items: center; justify-content: center;
+            /* 关键：禁用所有系统默认触摸手势，确保 JS 接管拖拽 */
+            touch-action: none; 
+            display: flex; align-items: center; justify-content: center;
         }
         .pan-viewport:active { cursor: grabbing; }
 
-        #renderCanvas { width: 100%; height: 100%; display: block; }
+        #renderCanvas { width: 100%; height: 100%; display: block; touch-action: none; }
 
         .info-panel {
             width: 380px; padding: 40px; display: flex; flex-direction: column;
@@ -132,7 +144,11 @@
         
         @media (max-width: 768px) {
             #detailPanel { flex-direction: column; }
-            .info-panel { width: 100%; height: 350px; border-left: none; border-top: 1px solid rgba(255,255,255,0.1); padding: 25px; }
+            .info-panel { 
+                width: 100%; height: auto; min-height: 300px; 
+                border-left: none; border-top: 1px solid rgba(255,255,255,0.1); padding: 25px; 
+            }
+            .main-title { font-size: 5vw; } /* 移动端标题根据宽度缩放 */
         }
     </style>
 </head>
@@ -143,9 +159,9 @@
     <canvas id="bg-canvas"></canvas>
 
     <div id="intro">
-        <div class="text-center px-6 relative z-10">
-            <p class="mb-3 tracking-[0.3em] text-red-500 font-bold text-[10px] md:text-xs">2025年度艺术人才培训资助项目</p>
-            <h1 class="main-title text-xl md:text-3xl lg:text-4xl mb-10 uppercase">
+        <div class="text-center px-4 relative z-10">
+            <p class="mb-3 tracking-[0.2em] text-red-500 font-bold text-[10px] md:text-xs">2025年度艺术人才培训资助项目</p>
+            <h1 class="main-title text-lg md:text-3xl lg:text-4xl mb-10 uppercase">
                 《基层戏曲院团舞美业务骨干人才培训》<br>创作实践成果展
             </h1>
             <button onclick="showPreface()" class="btn-action rounded-full px-10">进入展厅</button>
@@ -154,8 +170,8 @@
 
     <div id="preface">
         <div class="max-w-3xl w-[90%] text-white/80 leading-relaxed font-light">
-            <h2 class="text-2xl font-black mb-8 text-blue-400 border-b border-blue-400/30 pb-4 tracking-widest">PREFACE / 前言</h2>
-            <div class="preface-content text-sm md:text-base space-y-6">
+            <h2 class="text-xl md:text-2xl font-black mb-6 md:mb-8 text-blue-400 border-b border-blue-400/30 pb-4 tracking-widest">PREFACE / 前言</h2>
+            <div class="preface-content text-[13px] md:text-base space-y-6">
                 <p style="text-indent: 2em;">由国家艺术基金资助，上海戏剧学院组织实施的2025年度艺术人才培训资助项目《基层戏曲院团舞美业务骨干人才培训》，自2025年7月15日正式启动招生，8月30日截止报名。根据国家艺术基金管理办法，项目组组织专家对有效报名资料进行评审，并报国家艺术基金管理中心批准，最终录取了来自全国16个省、直辖市、自治区，涵盖二十多个剧种收的30名学员，于10月13日举办了隆重的开班仪式。</p>
                 <p style="text-indent: 2em;">该培训项目通过系统化培训，显著提升了基层戏曲院团舞美骨干人才的专业能力与综合素质，为文化传承创新提供了核心动力。其意义和效能主要体现在以下三方面：</p>
                 <p><strong>一是赋能个人才干，构建复合型能力体系。</strong>项目通过理论教学与实践训练相结合，帮助学员掌握前沿创作理念与专业技能。前30天邀请42位专家集中授课，240课时内容横跨13个专业方向，既夯实了专业基础，也提升了跨领域协作能力，为个人职业发展奠定坚实基础。</p>
@@ -163,7 +179,7 @@
                 <p><strong>三是服务国家战略，开拓文旅融合发展新局面。</strong>项目始终围绕国家文化战略展开，培训工作的后30天，学员们回到各自的工作岗位，用课堂授课学习所得，完成舞台实践课程，项目组组织专家进行线上答疑指导，截止到12月12日，每位学员均完成了不少于3000字的论文1篇，全班提交创作作品超过120部，以丰富多彩的舞台呈现形式，最终为此次培训画上了圆满的句号。</p>
                 <p style="text-indent: 2em;" class="text-blue-300 italic font-normal">聚是一团火，散是满天星，希望各位学员带着培训所学的丰硕成果，迎接基层舞美工作的机遇与挑战，深入领会创造性转化和创新性发展的要旨，为创新实践激活传统戏曲文化生命力做出应有的贡献。</p>
             </div>
-            <div class="mt-10">
+            <div class="mt-8 md:mt-10">
                 <button onclick="enterGallery()" class="btn-action rounded-md px-12">开启观展</button>
             </div>
         </div>
@@ -181,11 +197,11 @@
         <div class="info-panel">
             <div>
                 <div class="text-blue-500 text-[9px] tracking-[0.2em] font-bold mb-2 uppercase">Works Index <span id="d-id">01</span></div>
-                <h2 id="d-title" class="text-3xl font-black mb-6">作品名称</h2>
+                <h2 id="d-title" class="text-2xl md:text-3xl font-black mb-4 md:mb-6">作品名称</h2>
                 <div class="w-10 h-1 bg-red-500 mb-6"></div>
-                <p id="d-desc" class="text-sm text-white/50 leading-relaxed font-light"></p>
+                <p id="d-desc" class="text-[13px] md:text-sm text-white/50 leading-relaxed font-light"></p>
             </div>
-            <button class="btn-action w-full rounded-lg py-4" onclick="closeDetail()">返回展厅</button>
+            <button class="btn-action w-full rounded-lg py-4 mt-8" onclick="closeDetail()">返回展厅</button>
         </div>
     </div>
 
@@ -223,24 +239,18 @@
         ].map(w => ({...w, desc: "2025年度艺术人才培训资助项目——《基层戏曲院团舞美业务骨干人才培训》创作实践成果展作品。"}));
 
         let isGalleryActive = false;
-        let frameCount = 0;
 
-        // 飞驰彩带逻辑：全页面随机分布
         function createShootingBar() {
             const container = document.getElementById('shooting-container');
             const bar = document.createElement('div');
             bar.className = 'shooting-bar';
             
             const color = Math.random() > 0.4 ? 'var(--color-red)' : 'var(--color-blue)';
-            
-            // 垂直方向全屏分布 (0% - 100%)
             const startY = Math.random() * 100;
-
-            const duration = 1500 + Math.random() * 2500; // 较快速度
-            const width = 300 + Math.random() * 500; // 加长彩带
-            const height = 4 + Math.random() * 3; // 加宽彩带 (4px-7px)
+            const duration = 1500 + Math.random() * 2500;
+            const width = 300 + Math.random() * 500;
+            const height = 4 + Math.random() * 3;
             
-            // 封面页极低透明度，展厅页正常显示
             const opacity = isGalleryActive ? (0.2 + Math.random() * 0.4) : (0.03 + Math.random() * 0.07);
 
             bar.style.height = height + 'px';
@@ -262,10 +272,10 @@
             }).onfinish = () => bar.remove();
         }
         
-        // 动态频率控制器
         function spawnLoop() {
-            // 如果在展厅，每 150ms 生成一个；如果在开头，每 600ms 生成一个
-            const interval = isGalleryActive ? 150 : 600;
+            // 移动端生成频率进一步降低以保证性能
+            const baseInterval = window.innerWidth < 768 ? 200 : 150;
+            const interval = isGalleryActive ? baseInterval : 800;
             createShootingBar();
             setTimeout(spawnLoop, interval);
         }
@@ -296,8 +306,8 @@
             const imgRatio = img.width / img.height;
             const viewRatio = w / h;
             let dw, dh;
-            if (imgRatio > viewRatio) { dw = w * 0.8; dh = dw / imgRatio; }
-            else { dh = h * 0.8; dw = dh * imgRatio; }
+            if (imgRatio > viewRatio) { dw = w * 0.85; dh = dw / imgRatio; }
+            else { dh = h * 0.7; dw = dh * imgRatio; }
 
             d_ctx.save();
             d_ctx.translate(w/2 + state.x, h/2 + state.y);
@@ -324,6 +334,7 @@
         function closeDetail() { document.getElementById('detailPanel').classList.remove('active'); }
 
         let lastX = 0, lastY = 0;
+        // 使用 Pointer Events 统一处理鼠标和触摸
         panArea.addEventListener('pointerdown', e => {
             state.isDragging = true;
             lastX = e.clientX; lastY = e.clientY;
@@ -337,10 +348,13 @@
             draw();
         });
         panArea.addEventListener('pointerup', () => state.isDragging = false);
+        panArea.addEventListener('pointercancel', () => state.isDragging = false);
+
+        // 缩放逻辑
         panArea.addEventListener('wheel', e => {
             e.preventDefault();
             const factor = e.deltaY > 0 ? 0.9 : 1.1;
-            state.scale = Math.min(Math.max(0.5, state.scale * factor), 10);
+            state.scale = Math.min(Math.max(0.3, state.scale * factor), 10);
             draw();
         }, { passive: false });
 
@@ -384,8 +398,12 @@
         function initStars() {
             const bg = document.getElementById('bg-canvas'), ctx = bg.getContext('2d');
             let w, h;
-            const resize = () => { w = bg.width = window.innerWidth; h = bg.height = window.innerHeight; };
-            window.addEventListener('resize', resize); resize();
+            const resize = () => { 
+                w = bg.width = window.innerWidth; 
+                h = bg.height = window.innerHeight; 
+            };
+            window.addEventListener('resize', resize); 
+            resize();
             function loop() {
                 ctx.fillStyle = 'rgba(0,0,0,0.2)';
                 ctx.fillRect(0, 0, w, h);
